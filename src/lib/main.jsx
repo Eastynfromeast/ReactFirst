@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Board from './components/board'
 
@@ -8,8 +9,8 @@ export class Main extends React.Component {
             history: [{
                 squares: Array(9).fill(null),
             }],
-            stepNumber: 0,
-            xIsNext: true,
+            played: 0,
+            turnForX: true
         }
     }
 
@@ -18,8 +19,8 @@ export class Main extends React.Component {
      * @param {*} squares => [null, null, null, null, 'X', null, null, null, null]
      * @returns "O" || "X" || null
      */
-    calculateWinner(squares) {
-        const lines = [
+    checkWinningCases(squares) {
+        const winningCases = [
             [0, 1, 2],
             [3, 4, 5],
             [6, 7, 8],
@@ -29,8 +30,8 @@ export class Main extends React.Component {
             [0, 4, 8],
             [2, 4, 6],
         ];
-        for (let i = 0; i < lines.length; i++) {
-            const [a, b, c] = lines[i];
+        for (let i = 0; i < winningCases.length; i++) {
+            const [a, b, c] = winningCases[i];
             
             if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
                 return squares[a];
@@ -40,34 +41,34 @@ export class Main extends React.Component {
     }
 
     checkExistValue(squares, index) {
+        //console.log(squares[index]); 값은 무조건 null 이 나옴 
         return squares[index];
+        
     }
 
-    handleClick(index) {
-        const history = this.state.history.slice(0, this.state.stepNumber + 1);
-        const current = history[history.length - 1];
-        const squares = current.squares.slice();
-        console.log( history, current );
-        console.log("Squares is " + squares);
+    squareClicked(index) {
+        const history = this.state.history.slice(0, this.state.played + 1);
+        const markedLast = history[history.length - 1];
+        const checkedSquare = markedLast.squares.slice();
 
         // if (this.calculateWinner(squares)) {
         //     return;
         // }
-        if (this.checkExistValue(squares, index)) {
-            return;
-        }
+        // if (this.checkExistValue(squares, index)) {
+        //     return;
+        // }
 
         // 선택된 블럭이 아무도 선택하지 않은 블럭 
-        squares[index] = this.state.xIsNext ? 'X' : 'O';
+        checkedSquare[index] = this.state.turnForX ? 'X' : 'O';
         
 
         // 
         this.setState({
             history: history.concat([{
-                squares: squares
+                squares: checkedSquare
             }]),
-            stepNumber: history.length,
-            xIsNext: !this.state.xIsNext,
+            played: history.length,
+            turnForX: !this.state.turnForX
         });
     }
 
@@ -81,8 +82,8 @@ export class Main extends React.Component {
 
     render() {
         const history = this.state.history;
-        const current = history[this.state.stepNumber];
-        const winner = this.calculateWinner(current.squares);
+        const markedLast = history[this.state.played];
+        const winner = this.checkWinningCases(markedLast.squares);
 
         // const moves = history.map((step, move) => {
         //     const desc = move ?
@@ -99,16 +100,16 @@ export class Main extends React.Component {
 
         let status;
         if (winner) {
-            status = 'Winner: ' + winner;
+            status =  winner + ' Won!';
         } else {
-            status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+            status = 'Next player: ' + (this.state.turnForX ? 'X' : 'O');
         }
         return (
             <div className="game">
                 <div className="game-board">
                     <Board
-                        squares={current.squares}
-                        onClick={(index) => this.handleClick(index)}
+                        squares={markedLast.squares}
+                        onClick={(index) => this.squareClicked(index)}
                     />
                 </div>
                 <div className="game-info">
